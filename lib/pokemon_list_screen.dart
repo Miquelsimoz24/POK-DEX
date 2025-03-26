@@ -11,7 +11,8 @@ import 'pokemon_loading_animation.dart';
 import 'pokemon_compare_screen.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'error_widgets.dart';
+import 'dart:io';
+import 'notificaciones.dart';
 
 // Add this enum at the top of the file, after the imports
 enum SortOrder {
@@ -47,7 +48,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   bool _isGridView = false;
   String? _selectedType = "Todos";
   SortOrder _currentSort = SortOrder.numberAsc;
-  bool _hasError = false;
+  bool _hasInternetConnection = true;
 
   final List<String> _pokemonTypes = [
     "Todos",
@@ -74,8 +75,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPokemon();
-    _loadFavorites();
+    _checkConnectionAndLoadData();
     _scrollController.addListener(_onScroll);
   }
 
@@ -96,28 +96,47 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     }
   }
 
+  Future<void> _checkConnectionAndLoadData() async {
+    if (await _checkInternetConnection()) {
+      _loadPokemon();
+      _loadFavorites();
+    }
+  }
+
+  Future<bool> _checkInternetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        setState(() => _hasInternetConnection = true);
+        return true;
+      }
+    } catch (_) {
+      setState(() => _hasInternetConnection = false);
+      return false;
+    }
+    return false;
+  }
+
   Future<void> _loadPokemon() async {
     if (!mounted) return;
-
     setState(() => _isLoading = true);
 
     try {
+      // Clear existing lists before loading new data
+      _pokemonList.clear();
+      _filteredPokemonList.clear();
+
       final pokemonList = await _pokemonService.fetchPokemon(_currentOffset);
       if (mounted) {
         setState(() {
           _pokemonList.addAll(pokemonList);
           _filteredPokemonList = List.from(_pokemonList);
           _isLoading = false;
-          _hasError = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasError = true;
-        });
-        _showErrorSnackBar();
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -128,16 +147,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     setState(() => _isLoadingMore = true);
 
     try {
-      final remainingPokemon = PokemonService.totalPokemon - _currentOffset;
-      if (remainingPokemon <= 0) {
-        setState(() {
-          _hasMoreData = false;
-          _isLoadingMore = false;
-        });
-        return;
-      }
-
-      final itemsToLoad = min(PokemonService.pokemonPerPage, remainingPokemon);
+      _currentOffset += PokemonService.pokemonPerPage;
       final morePokemon = await _pokemonService.fetchPokemon(_currentOffset);
 
       if (mounted) {
@@ -145,9 +155,12 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           if (morePokemon.isEmpty) {
             _hasMoreData = false;
           } else {
-            _pokemonList.addAll(morePokemon);
-            _currentOffset += morePokemon.length;
-
+            // Check for duplicates before adding
+            for (var pokemon in morePokemon) {
+              if (!_pokemonList.any((p) => p.id == pokemon.id)) {
+                _pokemonList.add(pokemon);
+              }
+            }
             if (_searchController.text.isEmpty) {
               _filteredPokemonList = List.from(_pokemonList);
               _applyTypeFilter();
@@ -158,15 +171,8 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
         });
       }
     } catch (e) {
-      print('Error loading more Pokemon: $e');
       if (mounted) {
-        setState(() {
-          _isLoadingMore = false;
-          _hasMoreData = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al cargar más Pokémon')),
-        );
+        setState(() => _isLoadingMore = false);
       }
     }
   }
@@ -404,7 +410,6 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: widget.isDarkMode ? Colors.black : Colors.yellow[100],
       appBar: AppBar(
         backgroundColor: widget.isDarkMode ? Colors.grey[900] : Colors.amber,
         toolbarHeight: 100, // Increase height to accommodate both rows
@@ -524,11 +529,37 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
           ],
         ),
       ),
-      body: _hasError
-          ? ErrorView(
-              message: 'No se han podido cargar los Pokémon',
-              details: 'Comprueba tu conexión a internet e inténtalo de nuevo',
-              onRetry: _loadPokemon,
+      body: !_hasInternetConnection
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.wifi_off,
+                    size: 64,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Sin conexión a Internet',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Comprueba tu conexión e inténtalo de nuevo',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: _checkConnectionAndLoadData,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
             )
           : Column(
               children: [
@@ -772,12 +803,20 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
 
   Future<void> _toggleFavorite(int pokemonId) async {
     final prefs = await SharedPreferences.getInstance();
+    final pokemon = _pokemonList.firstWhere((p) => p.id == pokemonId);
 
     setState(() {
       if (_favoritePokemonIds.contains(pokemonId)) {
         _favoritePokemonIds.remove(pokemonId);
       } else {
         _favoritePokemonIds.add(pokemonId);
+        // Add notification when adding to favorites
+        NotificationService.scheduleNotification(
+          pokemonId,
+          '¡Nuevo Favorito!',
+          '¡${pokemon.name.toUpperCase()} ahora es tu favorito!',
+          DateTime.now().add(const Duration(seconds: 3)),
+        );
       }
     });
 

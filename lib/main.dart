@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pokedex_flutter/notificaciones.dart';
 import 'pokemon_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   runApp(const PokedexApp());
 }
 
