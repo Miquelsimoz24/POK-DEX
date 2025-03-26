@@ -1,0 +1,30 @@
+1.	Mejoras en la interfaz:
+●	Diseño más atractivo con Material Design:
+●	Vista detallada de cada Pokémon: Al hacer clic en un Pokémon, abrir una pantalla con más detalles como:
+●	Modo oscuro: Implementar un ThemeData para que el usuario pueda elegir entre modo claro y oscuro.
+●	Cambio de vista: Permitir alternar entre una vista en lista y una vista en cuadrícula con botones de cambio.
+●	Cambio de color según tipo: Hacer que el fondo o los bordes de cada tarjeta cambien según el tipo del Pokémon 
+
+2.	Mejoras en la funcionalidad:
+●	Búsqueda de Pokémon: Agregar un TextField para filtrar la lista de Pokémon por nombre.
+●	Cargar más Pokémon: En lugar de solo los primeros 20, permitir que el usuario cargue más al hacer scroll.
+●	Favoritos: Agregar la posibilidad de marcar Pokémon como favoritos y guardarlos localmente con SharedPreferences.
+●	Filtros por tipo: Permitir filtrar los Pokémon según su tipo (agua, fuego, eléctrico, etc.).
+●	Ordenar	Pokémon: Agregar	una	opción	para	ordenar	los	Pokémon alfabéticamente o por número en la Pokédex.
+●	Modo aleatorio: Botón para mostrar un Pokémon al azar con sus detalles.
+●	Notificación tras seleccionar un Pokémon favorito:
+
+3.	Mejoras en el manejo de datos:
+●	Manejo de errores: Mostrar un mensaje personalizado si la API falla o no hay conexión a internet.
+
+
+4.	Opcionales para subir nota:
+●	Optimización del consumo de la API:
+●	Animaciones avanzadas:
+●	Animación de carga: En lugar del CircularProgressIndicator, usar una animación con un ícono de Poké Ball girando.
+●	Sonidos al interactuar: Reproducir un sonido cuando se toca un Pokémon, como su grito característico.
+●	Comparador de Pokémon: Permitir seleccionar dos Pokémon y compararlos en estadísticas.
+
+Falta hacer
+●	Temas personalizados: Permitir a los usuarios cambiar el tema de la app con opciones predefinidas 
+(Pokédex clásica, retro, etc.).
