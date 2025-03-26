@@ -28,3 +28,7 @@
 Falta hacer
 ●	Temas personalizados: Permitir a los usuarios cambiar el tema de la app con opciones predefinidas 
 (Pokédex clásica, retro, etc.).
+
+Cosas para hacer mas 
+
+●   hacer los shainis
