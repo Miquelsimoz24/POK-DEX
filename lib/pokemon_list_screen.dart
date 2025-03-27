@@ -407,6 +407,20 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
     );
   }
 
+  void _openFavorites() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FavoritesScreen(allPokemon: _pokemonList),
+      ),
+    );
+
+    // Update favorites if changes were made
+    if (result == true) {
+      _loadFavorites(); // Reload favorites from SharedPreferences
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -489,15 +503,7 @@ class _PokemonListScreenState extends State<PokemonListScreen> {
                   constraints: const BoxConstraints(),
                   icon: const Icon(Icons.favorite, color: Colors.red),
                   tooltip: 'Favoritos',
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            FavoritesScreen(allPokemon: _pokemonList),
-                      ),
-                    );
-                  },
+                  onPressed: _openFavorites,
                 ),
                 IconButton(
                   padding: const EdgeInsets.symmetric(horizontal: 4),

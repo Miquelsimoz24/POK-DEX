@@ -134,25 +134,39 @@ class _PokemonDetailsScreenState extends State<PokemonDetailsScreen> {
           setState(() => _isPlayingSound = false);
         }
       },
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        children: [
-          Hero(
-            tag: 'pokemon-${widget.pokemon.id}',
-            child: Image.network(
-              widget.pokemon.imageUrl,
-              height: 200,
+      child: Container(
+        padding: const EdgeInsets.all(16.0),
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Hero(
+              tag: 'pokemon-${widget.pokemon.id}',
+              child: Image.network(
+                widget.pokemon.imageUrl,
+                height: 250, // Increased from 200 to 250
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Icon(
-              _isPlayingSound ? Icons.volume_up : Icons.volume_up_outlined,
-              color: Theme.of(context).primaryColor,
-              size: 28,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                padding: const EdgeInsets.all(8.0),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .scaffoldBackgroundColor
+                      .withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  _isPlayingSound ? Icons.volume_up : Icons.volume_up_outlined,
+                  color: Theme.of(context).primaryColor,
+                  size: 28,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
